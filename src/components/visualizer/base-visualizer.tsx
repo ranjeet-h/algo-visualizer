@@ -1,11 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { ReactNode, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, ChevronDown, ChevronUp, Maximize2, Minimize2, ExternalLink, Share2, DownloadCloud, Settings } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Card, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { ChevronDown, ChevronUp, Settings } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Separator } from '../ui/separator';
 import { cn } from '../../lib/utils';
 
@@ -20,15 +16,13 @@ interface BaseVisualizerProps {
 }
 
 export function BaseVisualizer({
-  title,
-  description,
   controls,
   sidebar,
   children,
   timeComplexity = "O(n log n)",
   spaceComplexity = "O(n)"
 }: BaseVisualizerProps) {
-  const [isFullscreen, setIsFullscreen] = useState(false);
+
   const [activeTab, setActiveTab] = useState<'visualization' | 'information'>('visualization');
   const [isConfigCollapsed, setConfigCollapsed] = useState(true);
 
@@ -37,7 +31,7 @@ export function BaseVisualizer({
       {/* Main Content */}
       <div className={cn(
         "flex flex-col gap-4 items-start w-full",
-        isFullscreen && "fixed inset-0 z-50 bg-background p-6 overflow-auto"
+         "fixed inset-0 z-50 bg-background p-6 overflow-auto"
       )}>
         {/* Visualization Section */}
         <motion.div 

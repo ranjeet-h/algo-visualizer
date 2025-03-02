@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect, useCallback, memo } from "react";
 import { Pause, Play, RotateCcw, SkipBack, SkipForward, Clock, Info } from "lucide-react";
 import { Button } from "../ui/button";

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useMemo, useRef } from 'react';
 import { ArrayItem } from '../../types/visualizer';
 import { VisualizationControls } from './visualization-controls';

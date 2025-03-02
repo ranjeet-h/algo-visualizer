@@ -115,7 +115,7 @@ export function D3HashVisualizer({
       .append('rect')
       .attr('width', innerWidth - bucketLabelWidth)
       .attr('height', cellHeight)
-      .attr('fill', (d, i) => i % 2 === 0 ? '#f9fafb' : '#f3f4f6')
+      .attr('fill', (_d, i) => i % 2 === 0 ? '#f9fafb' : '#f3f4f6')
       .attr('stroke', '#e5e7eb')
       .attr('rx', 4);
     
@@ -365,7 +365,7 @@ export function D3HashVisualizer({
 
     // Add hover effects for entries
     svg.selectAll('.entry')
-      .on('mouseover', (event, d) => {
+      .on('mouseover', (_event, d) => {
         tooltip
           .style('opacity', 1)
           .html(`Key: ${(d as HashTableEntry).key}<br>Value: ${(d as HashTableEntry).value}<br>Status: ${(d as HashTableEntry).status || 'default'}`);

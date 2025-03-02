@@ -465,7 +465,7 @@ export function D3ArrayVisualizer({
     // Add event listeners based on visualization style
     if (visualStyle === 'bars') {
       g.selectAll<SVGRectElement, ArrayItem>('.bar')
-        .on('mouseover', (event, d) => {
+        .on('mouseover', (_event, d) => {
           const index = data.indexOf(d);
           tooltip
             .style('opacity', 1)
@@ -481,7 +481,7 @@ export function D3ArrayVisualizer({
         });
     } else if (visualStyle === 'bubbles') {
       g.selectAll<SVGCircleElement, ArrayItem>('.bubble')
-        .on('mouseover', (event, d) => {
+        .on('mouseover', (_event, d) => {
           const index = data.indexOf(d);
           tooltip
             .style('opacity', 1)
