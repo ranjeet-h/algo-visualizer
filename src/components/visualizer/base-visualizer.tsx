@@ -30,8 +30,7 @@ export function BaseVisualizer({
     <div className="flex flex-col gap-8 w-full max-w-7xl mx-auto">
       {/* Main Content */}
       <div className={cn(
-        "flex flex-col gap-4 items-start w-full",
-         "fixed inset-0 z-50 bg-background p-6 overflow-auto"
+        "flex flex-col gap-4 items-start w-full"
       )}>
         {/* Visualization Section */}
         <motion.div 
