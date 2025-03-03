@@ -1,54 +1,90 @@
-# React + TypeScript + Vite
+# Algo-Visualized
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An interactive platform to visualize and understand data structures and algorithms, built with React, TypeScript, and Vite.
 
-Currently, two official plugins are available:
+## 🌟 Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### Data Structures Visualizations
+- **Arrays**: Visualize array operations and manipulations
+- **Linked Lists**: Interactive visualizations for singly, doubly, and circular linked lists
+- **Stacks & Queues**: Visualize stack, queue, and deque operations
+- **Hash Tables**: Explore hash maps and hash sets with collision resolution
+- **Trees**: Visualize binary trees and tree operations
 
-## Expanding the ESLint configuration
+### Algorithm Visualizations
+- **Sorting Algorithms**: Bubble Sort, Selection Sort, Insertion Sort, Quick Sort, Merge Sort
+- More algorithms coming soon!
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🚀 Getting Started
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/yourusername/algo-visualized.git
+cd algo-visualized
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+2. Install dependencies
+```bash
+npm install
+# or
+yarn
 ```
+
+3. Start the development server
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+4. Open your browser and navigate to `http://localhost:5173`
+
+## 🛠️ Built With
+
+- [React](https://reactjs.org/) - UI library
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
+- [Vite](https://vitejs.dev/) - Build tool and development server
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [D3.js](https://d3js.org/) - Data visualization library
+- [Framer Motion](https://www.framer.com/motion/) - Animation library
+- [Radix UI](https://www.radix-ui.com/) - Unstyled, accessible UI components
+
+## 🎯 Usage
+
+1. Select a data structure or algorithm from the sidebar menu
+2. Interact with the visualization using the control panel
+3. Observe how the data structure or algorithm behaves with different inputs and operations
+
+## 📚 Learning Resources
+
+Each visualization includes:
+- Brief explanation of the data structure or algorithm
+- Time and space complexity information
+- Interactive controls to see operations in action
+- Step-by-step visualization of processes
+
+## 🔄 Future Enhancements
+
+- Graph algorithms (BFS, DFS, Dijkstra's, etc.)
+- Advanced data structures (AVL Trees, Red-Black Trees, etc.)
+- Path-finding algorithms
+- Dynamic programming visualizations
+- User accounts to save custom configurations
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 👥 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+---
+
+Happy learning and exploring algorithms! 🎉
