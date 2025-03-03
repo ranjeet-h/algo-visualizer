@@ -1,24 +1,21 @@
 import { useState, useEffect } from 'react';
 import { 
-  Menu, X, ChevronRight, LayoutGrid, Code2, Braces, Search, 
-  Bell, Settings, HelpCircle, List, Link, Layers, 
+  Menu, X, ChevronRight, LayoutGrid, Code2, Braces, Search, Settings, HelpCircle, List, Link, Layers, 
   GitBranch, Network, ArrowUpDown, SortAsc, 
-  SortDesc, Shuffle, Sliders, Hash, Database,
+  SortDesc, Shuffle, Hash, Database,
   Binary, BarChart, FileSearch, Code, Clock, 
   Sigma, Puzzle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { ThemeToggle } from '../ui/theme-toggle';
-import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { Separator } from '../ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { dataStructures, algorithms } from '../../lib/utils';
 import React from 'react';
+import { Button } from '@radix-ui/themes';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -39,7 +36,7 @@ interface CategoryData {
 }
 
 export function MainLayout({ children, onSelect }: MainLayoutProps) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeItem, setActiveItem] = useState<{category: string, item: string} | null>(null);
@@ -308,6 +305,23 @@ export function MainLayout({ children, onSelect }: MainLayoutProps) {
     // if (!selectedCategory) {
     //   setSelectedCategory('Algorithms');
     // }
+
+    if (window.innerWidth > 768) {
+      setIsSidebarOpen(true);
+    }
+
+    // Handle sidebar visibility on mobile
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   const handleSelect = (category: string, item: string) => {
@@ -365,31 +379,7 @@ export function MainLayout({ children, onSelect }: MainLayoutProps) {
               />
             </div>
             
-            {/* Configuration Icon Button */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Sliders className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Configuration</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <Bell className="h-5 w-5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Notifications</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            
-            <ThemeToggle />
-            
+
             <Separator orientation="vertical" className="h-8" />
             
             <DropdownMenu>
@@ -464,7 +454,7 @@ export function MainLayout({ children, onSelect }: MainLayoutProps) {
               <button
                 onClick={() => setSelectedCategory(selectedCategory === category ? null : category)}
                 className={cn(
-                  "w-full flex items-center justify-between p-3 rounded-lg transition-all cursor-pointer",
+                  "border w-full flex items-center justify-between p-3 rounded-lg transition-all cursor-pointer",
                   "hover:bg-accent/60 hover:shadow-sm",
                   selectedCategory === category ? "bg-accent/40" : ""
                 )}
@@ -611,8 +601,8 @@ export function MainLayout({ children, onSelect }: MainLayoutProps) {
                 Try searching for something else or clear the search
               </p>
               <Button
-                variant="ghost"
-                size="sm"
+                variant="classic"
+                size="1"
                 className="mt-4"
                 onClick={() => setSearchQuery('')}
               >

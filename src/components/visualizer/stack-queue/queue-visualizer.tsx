@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { Plus, Minus, RotateCw, Eye } from 'lucide-react';
-import { BaseVisualizer } from './base-visualizer';
-import { VisualizationControls } from './visualization-controls';
-import { D3StackQueueVisualizer, StackQueueItem } from './d3-stack-queue-visualizer';
+import { BaseVisualizer } from '../common/base-visualizer';
+import { VisualizationControls } from '../common/visualization-controls';
+import { D3StackQueueVisualizer, StackQueueItem } from './d3/stack-queue-visualizer';
+import { Button } from '@radix-ui/themes';
 
 export function QueueVisualizer() {
   // Queue state
@@ -176,75 +176,80 @@ export function QueueVisualizer() {
       spaceComplexity="O(n)"
     >
       <div className="flex flex-col h-full">
-        {/* Queue Controls */}
+        {/* Controls */}
         <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Queue Operations</CardTitle>
-            <CardDescription>
-              Add or remove items from the queue. 
-              Remember: First In, First Out (FIFO)!
-            </CardDescription>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Operations</CardTitle>
+            <CardDescription>Manage queue operations: enqueue, dequeue, and peek</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4 items-end">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="newItemValue">Value</Label>
+            <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:items-end sm:flex-wrap sm:gap-4">
+              {/* Value input - full width on mobile */}
+              <div className="flex flex-col w-full sm:w-auto">
+                <Label htmlFor="newItemValue" className="mb-2">Value</Label>
                 <Input
                   id="newItemValue"
                   type="number"
                   value={newItemValue}
                   onChange={(e) => setNewItemValue(e.target.value)}
                   placeholder="Enter value"
-                  className="w-24"
+                  className="w-full sm:w-[190px]"
                   disabled={animationInProgress}
                 />
               </div>
               
-              <Button 
-                onClick={handleEnqueue} 
-                disabled={animationInProgress || !newItemValue}
-                className="flex items-center"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Enqueue
-              </Button>
-              
-              <Button 
-                onClick={handleDequeue} 
-                disabled={animationInProgress || !queue.length}
-                variant="secondary"
-                className="flex items-center"
-              >
-                <Minus className="h-4 w-4 mr-2" />
-                Dequeue
-              </Button>
-              
-              <Button 
-                onClick={handlePeek} 
-                disabled={animationInProgress || !queue.length}
-                variant="outline"
-                className="flex items-center"
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Peek Front
-              </Button>
-              
-              <Button 
-                onClick={resetQueue} 
-                disabled={animationInProgress}
-                variant="outline"
-                className="flex items-center ml-auto"
-              >
-                <RotateCw className="h-4 w-4 mr-2" />
-                Reset
-              </Button>
+              {/* Operation buttons - expanded on mobile, normal on desktop */}
+              <div className="grid grid-cols-1 sm:flex sm:flex-row gap-2 w-full sm:w-auto">
+                <Button 
+                  size="3"
+                  onClick={handleEnqueue} 
+                  disabled={animationInProgress || !newItemValue}
+                  className="w-full sm:w-auto flex items-center"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Enqueue
+                </Button>
+                
+                <Button 
+                  size="3"
+                  onClick={handleDequeue} 
+                  disabled={animationInProgress || !queue.length}
+                  variant="classic"
+                  className="w-full sm:w-auto flex items-center"
+                >
+                  <Minus className="h-4 w-4 mr-2" />
+                  Dequeue
+                </Button>
+                
+                <Button 
+                  size="3"
+                  onClick={handlePeek} 
+                  disabled={animationInProgress || !queue.length}
+                  variant="classic"
+                  className="w-full sm:w-auto flex items-center"
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Peek Front
+                </Button>
+                
+                <Button 
+                  size="3"
+                  onClick={resetQueue} 
+                  disabled={animationInProgress}
+                  variant="classic"
+                  className="w-full sm:w-auto flex items-center sm:ml-auto"
+                >
+                  <RotateCw className="h-4 w-4 mr-2" />
+                  Reset
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
         
         {/* Queue Visualization */}
         <Card className="flex-grow overflow-hidden">
-          <CardContent className="p-6 h-full relative">
+          <CardContent className="p-2 sm:p-6 h-full relative">
             <div className="w-full h-full">
               <D3StackQueueVisualizer 
                 items={queue}

@@ -1,12 +1,12 @@
 import { useState, useCallback } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { Minus, RotateCw, Eye, ArrowRight, ArrowLeft } from 'lucide-react';
-import { BaseVisualizer } from './base-visualizer';
-import { VisualizationControls } from './visualization-controls';
-import { D3StackQueueVisualizer, StackQueueItem } from './d3-stack-queue-visualizer';
+import { BaseVisualizer } from '../common/base-visualizer';
+import { VisualizationControls } from '../common/visualization-controls';
+import { D3StackQueueVisualizer, StackQueueItem } from './d3/stack-queue-visualizer';
+import { Button } from '@radix-ui/themes';
 
 export function DequeVisualizer() {
   // Deque state
@@ -276,96 +276,106 @@ export function DequeVisualizer() {
       <div className="flex flex-col h-full">
         {/* Controls */}
         <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-lg">Deque Operations</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Operations</CardTitle>
             <CardDescription>
               Add or remove items from either end of the deque.
-              A double-ended queue allows efficient operations at both ends.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-4">
-              {/* Input for new value */}
+              {/* Input for new value - full width on mobile */}
               <div className="flex flex-col gap-2 w-full">
-                <Label htmlFor="newItemValue">Value</Label>
-                <div className="flex gap-2">
+                <Label htmlFor="newItemValue" className="mb-1">Value</Label>
+                <div className="flex flex-col sm:flex-row gap-2 w-full">
                   <Input
                     id="newItemValue"
                     type="number"
                     value={newItemValue}
                     onChange={(e) => setNewItemValue(e.target.value)}
                     placeholder="Enter value"
-                    className="w-24"
+                    className="w-full sm:w-[190px]"
                     disabled={animationInProgress}
                   />
                   
-                  <Button 
-                    onClick={handleAddToFront} 
-                    disabled={animationInProgress || !newItemValue}
-                    className="flex items-center"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Add to Front
-                  </Button>
-                  
-                  <Button 
-                    onClick={handleAddToBack} 
-                    disabled={animationInProgress || !newItemValue}
-                    className="flex items-center"
-                  >
-                    Add to Back
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
+                    <Button 
+                      size="3"
+                      variant="classic"
+                      onClick={handleAddToFront} 
+                      disabled={animationInProgress || !newItemValue}
+                      className="w-full flex items-center justify-center"
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Add to Front
+                    </Button>
+                    
+                    <Button 
+                      size="3"
+                      variant="classic"
+                      onClick={handleAddToBack} 
+                      disabled={animationInProgress || !newItemValue}
+                      className="w-full flex items-center justify-center"
+                    >
+                      Add to Back
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
                 </div>
               </div>
               
-              {/* Operations */}
-              <div className="flex flex-wrap gap-2">
+              {/* Operations - stacked on mobile, flex on desktop */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:flex md:flex-wrap gap-2">
                 <Button 
+                  size="3"
                   onClick={handleRemoveFromFront} 
                   disabled={animationInProgress || !deque.length}
-                  variant="secondary"
-                  className="flex items-center"
+                  variant="classic"
+                  className="w-full sm:w-auto flex items-center justify-center"
                 >
                   <Minus className="h-4 w-4 mr-2" />
                   Remove Front
                 </Button>
                 
                 <Button 
+                  size="3"
                   onClick={handleRemoveFromBack} 
                   disabled={animationInProgress || !deque.length}
-                  variant="secondary"
-                  className="flex items-center"
+                  variant="classic"
+                  className="w-full sm:w-auto flex items-center justify-center"
                 >
                   <Minus className="h-4 w-4 mr-2" />
                   Remove Back
                 </Button>
                 
                 <Button 
+                  size="3"
                   onClick={handlePeekFront} 
                   disabled={animationInProgress || !deque.length}
-                  variant="outline"
-                  className="flex items-center"
+                  variant="classic"
+                  className="w-full sm:w-auto flex items-center justify-center"
                 >
                   <Eye className="h-4 w-4 mr-2" />
                   Peek Front
                 </Button>
                 
                 <Button 
+                  size="3"
                   onClick={handlePeekBack} 
                   disabled={animationInProgress || !deque.length}
-                  variant="outline"
-                  className="flex items-center"
+                  variant="classic"
+                  className="w-full sm:w-auto flex items-center justify-center"
                 >
                   <Eye className="h-4 w-4 mr-2" />
                   Peek Back
                 </Button>
                 
                 <Button 
+                  size="3"
                   onClick={resetDeque} 
                   disabled={animationInProgress}
-                  variant="outline"
-                  className="flex items-center ml-auto"
+                  variant="classic"
+                  className="w-full sm:w-auto flex items-center justify-center md:ml-auto"
                 >
                   <RotateCw className="h-4 w-4 mr-2" />
                   Reset
@@ -377,7 +387,7 @@ export function DequeVisualizer() {
         
         {/* Deque Visualization */}
         <Card className="flex-grow overflow-hidden">
-          <CardContent className="p-6 h-full relative">
+          <CardContent className="p-2 sm:p-6 h-full relative">
             <div className="w-full h-full">
               <D3StackQueueVisualizer 
                 items={deque}

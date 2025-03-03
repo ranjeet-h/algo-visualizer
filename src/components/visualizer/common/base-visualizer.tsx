@@ -1,9 +1,9 @@
 import { ReactNode, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, ChevronUp, Settings } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Separator } from '../ui/separator';
-import { cn } from '../../lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
+import { Separator } from '../../ui/separator';
+import { cn } from '../../../lib/utils';
 
 interface BaseVisualizerProps {
   title?: string;

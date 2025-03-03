@@ -1,14 +1,13 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Separator } from '../ui/separator';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
+import { Tabs, TabsList, TabsTrigger } from '../../ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { RotateCw, Plus, X } from 'lucide-react';
-import { BaseVisualizer } from './base-visualizer';
-import { VisualizationControls } from './visualization-controls';
-import { D3LinkedListVisualizer, SinglyLinkedListNode, DoublyLinkedListNode } from './d3-linked-list-visualizer';
+import { BaseVisualizer } from '../common/base-visualizer';
+import { VisualizationControls } from '../common/visualization-controls';
+import { D3LinkedListVisualizer, SinglyLinkedListNode, DoublyLinkedListNode } from './d3/linked-list-visualizer';
+import { Button } from '@radix-ui/themes';
 
 // We can represent circular lists using the same node structures, 
 // but make sure the last node's next points to the head
@@ -322,56 +321,58 @@ export function LinkedListVisualizer({ type = 'singly' }: LinkedListVisualizerPr
         {/* Type selector */}
         <div className="mb-6">
           <Tabs value={listType} onValueChange={(value) => setListType(value as LinkedListType)}>
-            <TabsList className="grid grid-cols-3">
-              <TabsTrigger value="singly">Singly Linked List</TabsTrigger>
-              <TabsTrigger value="doubly">Doubly Linked List</TabsTrigger>
-              <TabsTrigger value="circular">Circular Linked List</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 mt-2 mb-[-15px] gap-2">
+              <TabsTrigger value="singly" className="cursor-pointer border">Singly</TabsTrigger>
+              <TabsTrigger value="doubly" className="cursor-pointer border">Doubly</TabsTrigger>
+              <TabsTrigger value="circular" className="cursor-pointer border">Circular</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
         
         {/* Controls */}
         <Card className="mb-6">
-          <CardHeader>
+          <CardHeader className="pb-3">
             <CardTitle className="text-lg">Operations</CardTitle>
             <CardDescription>Add or remove nodes from the linked list</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-end gap-2">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="newNodeValue">Node Value</Label>
-                  <Input
-                    id="newNodeValue"
-                    type="number"
-                    value={newNodeValue}
-                    onChange={(e) => setNewNodeValue(e.target.value)}
-                    placeholder="Enter value"
-                    className="w-24"
-                  />
-                </div>
-                <Button onClick={handleAddToHead} disabled={isAnimating || !newNodeValue}>
+            <div className="flex flex-col space-y-4 sm:space-y-0 sm:flex-row sm:flex-wrap sm:gap-4">
+              {/* Node value input - full width on mobile */}
+              <div className="flex flex-col w-full sm:w-auto">
+                <Label htmlFor="newNodeValue" className="mb-2">Node Value</Label>
+                <Input
+                  id="newNodeValue"
+                  type="number"
+                  value={newNodeValue}
+                  onChange={(e) => setNewNodeValue(e.target.value)}
+                  placeholder="Enter value"
+                  className="w-full sm:w-[190px]"
+                />
+              </div>
+              
+              {/* Add operations - stack on mobile, side by side on desktop */}
+              <div className="grid grid-cols-1 sm:mt-7 sm:grid-cols-2 gap-2 w-full sm:w-auto">
+                <Button onClick={handleAddToHead} disabled={isAnimating || !newNodeValue} className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
                   Add to Head
                 </Button>
-                <Button onClick={handleAddToTail} disabled={isAnimating || !newNodeValue}>
+                <Button onClick={handleAddToTail} disabled={isAnimating || !newNodeValue} className="w-full">
                   <Plus className="h-4 w-4 mr-2" />
                   Add to Tail
                 </Button>
               </div>
-              
-              <Separator orientation="vertical" className="h-10" />
-              
-              <div className="flex items-end gap-2">
-                <Button onClick={handleRemoveFromHead} disabled={isAnimating || head === null}>
+                            
+              {/* Remove operations - stack on mobile, side by side on desktop */}
+              <div className="grid grid-cols-1 sm:mt-7 sm:grid-cols-3 gap-2 w-full sm:w-auto">
+                <Button onClick={handleRemoveFromHead} disabled={isAnimating || head === null} className="w-full">
                   <X className="h-4 w-4 mr-2" />
                   Remove Head
                 </Button>
-                <Button onClick={handleRemoveFromTail} disabled={isAnimating || tail === null}>
+                <Button onClick={handleRemoveFromTail} disabled={isAnimating || tail === null} className="w-full">
                   <X className="h-4 w-4 mr-2" />
                   Remove Tail
                 </Button>
-                <Button onClick={resetList} variant="outline">
+                <Button onClick={resetList} variant="outline" className="w-full">
                   <RotateCw className="h-4 w-4 mr-2" />
                   Reset
                 </Button>
@@ -382,7 +383,7 @@ export function LinkedListVisualizer({ type = 'singly' }: LinkedListVisualizerPr
         
         {/* Visualization */}
         <Card className="flex-grow overflow-hidden">
-          <CardContent className="p-6 h-full relative">
+          <CardContent className="p-2 sm:p-6 h-full relative">
             <div className="w-full h-full">
               {/* D3 Visualization */}
               <D3LinkedListVisualizer 
@@ -391,7 +392,7 @@ export function LinkedListVisualizer({ type = 'singly' }: LinkedListVisualizerPr
                 tail={tail}
                 selectedNode={selectedNode}
                 type={listType}
-                height={400}
+                height={300}
                 onNodeClick={handleNodeClick}
               />
             </div>

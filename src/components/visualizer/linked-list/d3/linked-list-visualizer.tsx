@@ -110,7 +110,8 @@ export function D3LinkedListVisualizer({
       id: index,
       value: node.value,
       status: node.status,
-      radius: 30, // Fixed size for all nodes
+      // Scale node radius based on container width for mobile responsiveness
+      radius: containerWidth < 500 ? 22 : 30, 
       isHead: index === head,
       isTail: index === tail,
     }));
@@ -149,38 +150,81 @@ export function D3LinkedListVisualizer({
     }
 
     return { nodes: d3Nodes, links: d3Links };
-  }, [nodes, head, tail, type]);
+  }, [nodes, head, tail, type, containerWidth]);
 
   // Main visualization effect
   useEffect(() => {
-    if (!svgRef.current || !nodes.length || containerWidth === 0) return;
+    if (!svgRef.current || !containerRef.current || !nodes.length) return;
 
+    // Get current dimensions
     const width = containerWidth;
-    const simulationData = prepareSimulationData();
-
-    // Clear previous visualization
+    // Adjust height based on screen size
+    const actualHeight = Math.min(height, containerWidth < 500 ? width * 0.9 : height);
+    
+    // Clear existing visualization
     d3.select(svgRef.current).selectAll('*').remove();
 
-    const svg = d3.select(svgRef.current);
-    
-    // Set viewBox to ensure the SVG scales properly
-    svg.attr('viewBox', `0 0 ${width} ${height}`);
+    // Create new SVG with responsive viewBox
+    const svg = d3.select(svgRef.current)
+      .attr('width', width)
+      .attr('height', actualHeight)
+      .attr('viewBox', `0 0 ${width} ${actualHeight}`)
+      .attr('preserveAspectRatio', 'xMidYMid meet');
 
-    const margin = { top: 20, right: 40, bottom: 20, left: 40 };
+    // Setup margin and inner dimensions
+    const margin = { top: 20, right: 20, bottom: 20, left: 20 };
     const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
+    const innerHeight = actualHeight - margin.top - margin.bottom;
 
     // Create main group element
     const g = svg
       .append('g')
       .attr('transform', `translate(${margin.left},${margin.top})`);
+      
+    // Add zoom and pan capabilities - especially helpful on mobile
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.5, 2.5]) // Limit zoom scale
+      .on('zoom', (event) => {
+        g.attr('transform', event.transform);
+      });
+      
+    // Initialize with a slight zoom out on small screens to show everything
+    if (containerWidth < 500 && nodes.length > 3) {
+      svg.call(zoom).call(
+        zoom.transform, 
+        d3.zoomIdentity.scale(0.8).translate(width * 0.1, 0)
+      );
+    } else {
+      svg.call(zoom);
+    }
+    
+    // Enable double-tap to reset zoom on mobile
+    let lastTapTime = 0;
+    svg.on('touchend', () => {
+      const currentTime = new Date().getTime();
+      const tapLength = currentTime - lastTapTime;
+      if (tapLength < 300 && tapLength > 0) {
+        // Double tap detected - reset zoom
+        svg.transition().duration(300).call(
+          zoom.transform, 
+          d3.zoomIdentity
+        );
+      }
+      lastTapTime = currentTime;
+    });
 
-    // Create force simulation
+    // Prepare data for visualization
+    const simulationData = prepareSimulationData();
+
+    // Create force simulation with adjusted strengths for mobile
+    const forceStrength = containerWidth < 500 ? -200 : -300;
+    const linkDistance = containerWidth < 500 ? 80 : 100;
+    
     const simulation = d3.forceSimulation<D3Node>(simulationData.nodes)
       .force('link', d3.forceLink<D3Node, D3Link>(simulationData.links)
         .id(d => d.id)
-        .distance(100))
-      .force('charge', d3.forceManyBody().strength(-300))
+        .distance(linkDistance))
+      .force('charge', d3.forceManyBody().strength(forceStrength))
       .force('center', d3.forceCenter(innerWidth / 2, innerHeight / 2))
       .force('x', d3.forceX(innerWidth / 2).strength(0.1))
       .force('y', d3.forceY(innerHeight / 2).strength(0.1))
@@ -325,11 +369,12 @@ export function D3LinkedListVisualizer({
     // Add value text
     nodeGroup.append('text')
       .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', 'middle')
-      .attr('font-size', '14px')
-      .attr('font-weight', 'bold')
+      .attr('dominant-baseline', 'central')
       .attr('fill', 'white')
-      .text(d => d.value);
+      .attr('font-weight', 'bold')
+      .attr('font-size', containerWidth < 500 ? '10px' : '14px')
+      .text(d => d.value)
+      .attr('pointer-events', 'none');
 
     // Add index text below node
     nodeGroup.append('text')
@@ -344,22 +389,22 @@ export function D3LinkedListVisualizer({
     nodeGroup.filter(d => d.isHead)
       .append('text')
       .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', 'middle')
-      .attr('y', d => -(d.radius) - 16)
-      .attr('font-size', '12px')
+      .attr('y', d => -(d.radius + (containerWidth < 500 ? 8 : 12)))
+      .attr('fill', 'currentColor')
+      .attr('font-size', containerWidth < 500 ? '10px' : '12px')
       .attr('font-weight', 'bold')
-      .attr('fill', '#3B82F6')
-      .text('HEAD');
+      .text('HEAD')
+      .attr('pointer-events', 'none');
 
     nodeGroup.filter(d => d.isTail)
       .append('text')
       .attr('text-anchor', 'middle')
-      .attr('dominant-baseline', 'middle')
-      .attr('y', d => -(d.radius) - (d.isHead ? 32 : 16))
-      .attr('font-size', '12px')
+      .attr('y', d => -(d.radius + (containerWidth < 500 ? 8 : 12)))
+      .attr('fill', 'currentColor')
+      .attr('font-size', containerWidth < 500 ? '10px' : '12px')
       .attr('font-weight', 'bold')
-      .attr('fill', '#EC4899')
-      .text('TAIL');
+      .text('TAIL')
+      .attr('pointer-events', 'none');
 
     // Update positions on each simulation tick
     simulation.on('tick', () => {

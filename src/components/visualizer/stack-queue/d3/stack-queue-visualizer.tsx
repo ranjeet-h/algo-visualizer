@@ -41,19 +41,23 @@ export function D3StackQueueVisualizer({
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(0);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
 
   // Setup resize observer to track container width changes
   useEffect(() => {
     if (!containerRef.current) return;
     
     // Get initial width
-    setContainerWidth(containerRef.current.clientWidth);
+    const width = containerRef.current.clientWidth;
+    setContainerWidth(width);
+    setIsMobile(width < 640); // 640px is the sm breakpoint in Tailwind
     
     // Create resize observer
     const resizeObserver = new ResizeObserver(entries => {
       if (!entries[0]) return;
       const { width } = entries[0].contentRect;
       setContainerWidth(width);
+      setIsMobile(width < 640);
     });
     
     // Start observing
@@ -120,7 +124,12 @@ export function D3StackQueueVisualizer({
     // Set viewBox to ensure the SVG scales properly
     svg.attr('viewBox', `0 0 ${width} ${height}`);
 
-    const margin = { top: 40, right: 40, bottom: 40, left: 40 };
+    const margin = { 
+      top: 40, 
+      right: isMobile ? 20 : 40, 
+      bottom: 40, 
+      left: isMobile ? 20 : 40 
+    };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
@@ -134,15 +143,15 @@ export function D3StackQueueVisualizer({
       .attr('x', width / 2)
       .attr('y', 20)
       .attr('text-anchor', 'middle')
-      .attr('font-size', '14px')
+      .attr('font-size', isMobile ? '12px' : '14px')
       .attr('font-weight', 'bold')
       .attr('fill', '#64748B')
       .text(`${type.charAt(0).toUpperCase() + type.slice(1)} Visualization`);
 
     // For stack visualization - vertical layout
     if (type === 'stack') {
-      const boxWidth = Math.min(innerWidth, 200);
-      const boxHeight = Math.min(50, innerHeight / (items.length + 1));
+      const boxWidth = Math.min(innerWidth, isMobile ? 150 : 200);
+      const boxHeight = Math.min(isMobile ? 40 : 50, innerHeight / (items.length + 1));
       const xPosition = innerWidth / 2 - boxWidth / 2;
       
       // Create container for the stack
@@ -216,31 +225,36 @@ export function D3StackQueueVisualizer({
         .attr('y', d => d.y!)
         .attr('text-anchor', 'middle')
         .attr('dominant-baseline', 'middle')
-        .attr('font-size', '14px')
+        .attr('font-size', isMobile ? '12px' : '14px')
         .attr('font-weight', 'bold')
         .attr('fill', 'white')
-        .text(d => d.value);
+        .text(d => {
+          const valueText = String(d.value);
+          return isMobile && valueText.length > 6 
+            ? `${valueText.substring(0, 5)}...` 
+            : valueText;
+        });
       
       // Add index indicators
       itemGroups.append('text')
-        .attr('x', d => d.x! - boxWidth / 2 - 10)
+        .attr('x', d => d.x! - boxWidth / 2 - (isMobile ? 5 : 10))
         .attr('y', d => d.y!)
         .attr('text-anchor', 'end')
         .attr('dominant-baseline', 'middle')
-        .attr('font-size', '12px')
+        .attr('font-size', isMobile ? '10px' : '12px')
         .attr('fill', '#64748B')
         .text((_, i) => items.length - 1 - i);
       
       // Add top indicator
       itemGroups.filter(d => d.isTop === true)
         .append('text')
-        .attr('x', d => d.x! + boxWidth / 2 + 10)
+        .attr('x', d => d.x! + boxWidth / 2 + (isMobile ? 5 : 10))
         .attr('y', d => d.y!)
         .attr('text-anchor', 'start')
         .attr('dominant-baseline', 'middle')
-        .attr('font-size', '12px')
+        .attr('font-size', isMobile ? '10px' : '12px')
+        .attr('fill', '#3B82F6')
         .attr('font-weight', 'bold')
-        .attr('fill', '#EF4444')
         .text('TOP');
     } 
     // For queue and deque visualization - horizontal layout
@@ -333,10 +347,15 @@ export function D3StackQueueVisualizer({
         .attr('y', d => d.y!)
         .attr('text-anchor', 'middle')
         .attr('dominant-baseline', 'middle')
-        .attr('font-size', '12px')
+        .attr('font-size', isMobile ? '12px' : '14px')
         .attr('font-weight', 'bold')
         .attr('fill', 'white')
-        .text(d => d.value);
+        .text(d => {
+          const valueText = String(d.value);
+          return isMobile && valueText.length > 6 
+            ? `${valueText.substring(0, 5)}...` 
+            : valueText;
+        });
       
       // Add index indicators below
       itemGroups.append('text')
@@ -490,14 +509,25 @@ export function D3StackQueueVisualizer({
       // Cleanup tooltip when component unmounts
       d3.select('body').select('.tooltip').remove();
     };
-  }, [items, type, containerWidth, height, getItemColor, prepareSimulationData, onItemClick, selectedItem, animationInProgress]);
+  }, [
+    containerWidth, 
+    height, 
+    items, 
+    type, 
+    prepareSimulationData, 
+    getItemColor, 
+    selectedItem, 
+    onItemClick, 
+    animationInProgress,
+    isMobile
+  ]);
 
   // If there are no items, show an empty state
   if (items.length === 0) {
     return (
       <div 
         ref={containerRef}
-        className="d3-stack-queue-visualizer w-full flex items-center justify-center"
+        className="d3-stack-queue-visualizer w-full flex items-center justify-center overflow-hidden"
         style={{ height: `${height}px` }}
       >
         <div className="text-center text-muted-foreground">
@@ -511,13 +541,18 @@ export function D3StackQueueVisualizer({
   return (
     <div 
       ref={containerRef}
-      className="d3-stack-queue-visualizer w-full"
+      className="d3-stack-queue-visualizer w-full overflow-auto"
+      style={{ minHeight: `${height}px` }}
     >
       <svg 
         ref={svgRef} 
         width="100%" 
         height={height}
-        className="w-full overflow-visible"
+        className="d3-stack-queue-svg"
+        style={{ 
+          minWidth: isMobile ? '300px' : '500px',
+          overflow: 'visible' 
+        }}
       />
     </div>
   );

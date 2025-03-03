@@ -1,14 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Separator } from '../ui/separator';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
+import { Tabs, TabsList, TabsTrigger } from '../../ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { RotateCw, Plus, Search, X, Hash, AlertTriangle } from 'lucide-react';
-import { BaseVisualizer } from './base-visualizer';
-import { VisualizationControls } from './visualization-controls';
-import { D3HashVisualizer } from './d3-hash-visualizer';
+import { BaseVisualizer } from '../common/base-visualizer';
+import { VisualizationControls } from '../common/visualization-controls';
+import { D3HashVisualizer } from './d3/hash-visualizer';
+import { Button } from '@radix-ui/themes';
+import { toast } from 'react-toastify';
 
 // Extended hash table entry with custom statuses
 interface HashTableEntry {
@@ -262,7 +262,7 @@ export function HashVisualizer({ type = 'map', bucketSize = 8 }: HashVisualizerP
       }));
       
       setSelectedEntry(searchKey);
-      alert(`Found entry with key "${searchKey}" in bucket ${bucketIndex}.`);
+      toast.success(`Found entry with key "${searchKey}" in bucket ${bucketIndex}.`);
     } else {
       // Entry not found - reset all to default
       updatedBuckets[bucketIndex] = updatedBuckets[bucketIndex].map(entry => ({
@@ -270,7 +270,7 @@ export function HashVisualizer({ type = 'map', bucketSize = 8 }: HashVisualizerP
         status: updatedBuckets[bucketIndex].length > 1 ? 'collision' : 'default'
       }));
       
-      alert(`No entry with key "${searchKey}" found in the hash table.`);
+      toast.error(`No entry with key "${searchKey}" found in the hash table.`);
     }
     
     setBuckets(updatedBuckets);
@@ -317,9 +317,9 @@ export function HashVisualizer({ type = 'map', bucketSize = 8 }: HashVisualizerP
         {/* Type selector */}
         <div className="mb-6">
           <Tabs value={hashType} onValueChange={(value) => setHashType(value as HashTableType)}>
-            <TabsList className="grid grid-cols-2">
-              <TabsTrigger value="map">Hash Map</TabsTrigger>
-              <TabsTrigger value="set">Hash Set</TabsTrigger>
+            <TabsList className="grid grid-cols-2 gap-2 mt-5">
+              <TabsTrigger value="map" className="border cursor-pointer">Hash Map</TabsTrigger>
+              <TabsTrigger value="set" className="border cursor-pointer">Hash Set</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -331,77 +331,103 @@ export function HashVisualizer({ type = 'map', bucketSize = 8 }: HashVisualizerP
             <CardDescription>Add, remove, or search for entries in the hash table</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-4">
-              <div className="flex items-end gap-2">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="newKey">Key</Label>
-                  <Input
-                    id="newKey"
-                    value={newKey}
-                    onChange={(e) => setNewKey(e.target.value)}
-                    placeholder="Enter key"
-                    className="w-32"
-                  />
-                </div>
-                
-                {hashType === 'map' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Add Entry Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Add Entry</h3>
+                <div className="flex flex-col sm:flex-row gap-2">
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="newValue">Value</Label>
+                    <Label htmlFor="newKey">Key</Label>
                     <Input
-                      id="newValue"
-                      value={newValue}
-                      onChange={(e) => setNewValue(e.target.value)}
-                      placeholder="Enter value"
-                      className="w-32"
+                      id="newKey"
+                      value={newKey}
+                      onChange={(e) => setNewKey(e.target.value)}
+                      placeholder="Enter key"
+                      className="w-full sm:w-32"
                     />
                   </div>
-                )}
-                
-                <Button 
-                  onClick={handleAddEntry} 
-                  disabled={isAnimating || !newKey || (hashType === 'map' && !newValue)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Entry
-                </Button>
+                  
+                  {hashType === 'map' && (
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="newValue">Value</Label>
+                      <Input
+                        id="newValue"
+                        value={newValue}
+                        onChange={(e) => setNewValue(e.target.value)}
+                        placeholder="Enter value"
+                        className="w-full sm:w-32"
+                      />
+                    </div>
+                  )}
+                  
+                  <div className="self-end mt-2">
+                    <Button 
+                      size="3"
+                      variant="classic"
+                      onClick={handleAddEntry} 
+                      disabled={isAnimating || !newKey || (hashType === 'map' && !newValue)}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Entry
+                    </Button>
+                  </div>
+                </div>
               </div>
               
-              <Separator orientation="vertical" className="h-10" />
-              
-              <div className="flex items-end gap-2">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="searchKey">Search Key</Label>
-                  <Input
-                    id="searchKey"
-                    value={searchKey}
-                    onChange={(e) => setSearchKey(e.target.value)}
-                    placeholder="Enter key"
-                    className="w-32"
-                  />
+              {/* Search and Remove Section */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium">Search & Remove</h3>
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="searchKey">Search Key</Label>
+                      <Input
+                        id="searchKey"
+                        value={searchKey}
+                        onChange={(e) => setSearchKey(e.target.value)}
+                        placeholder="Enter key"
+                        className="w-full sm:w-32"
+                      />
+                    </div>
+                    
+                    <div className="self-end mt-2">
+                      <Button 
+                        size="3"
+                        variant="classic"
+                        onClick={handleSearch} 
+                        disabled={isAnimating || !searchKey}
+                        className="w-full"
+                      >
+                        <Search className="h-4 w-4 mr-2" />
+                        Search
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <Button 
+                      size="3"
+                      variant="classic"
+                      onClick={() => selectedEntry && handleRemoveEntry(selectedEntry)} 
+                      disabled={isAnimating || !selectedEntry}
+                      className="w-full sm:w-auto"
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Remove Selected
+                    </Button>
+                    
+                    <Button 
+                      onClick={resetHashTable} 
+                      size="3"
+                      variant="classic"
+                      className="w-full sm:w-auto"
+                    >
+                      <RotateCw className="h-4 w-4 mr-2" />
+                      Reset
+                    </Button>
+                  </div>
                 </div>
-                
-                <Button 
-                  onClick={handleSearch} 
-                  disabled={isAnimating || !searchKey}
-                  variant="secondary"
-                >
-                  <Search className="h-4 w-4 mr-2" />
-                  Search
-                </Button>
-                
-                <Button 
-                  onClick={() => selectedEntry && handleRemoveEntry(selectedEntry)} 
-                  disabled={isAnimating || !selectedEntry}
-                  variant="destructive"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Remove Selected
-                </Button>
-                
-                <Button onClick={resetHashTable} variant="outline">
-                  <RotateCw className="h-4 w-4 mr-2" />
-                  Reset
-                </Button>
               </div>
             </div>
           </CardContent>
@@ -419,26 +445,28 @@ export function HashVisualizer({ type = 'map', bucketSize = 8 }: HashVisualizerP
         
         {/* Visualization */}
         <Card className="flex-grow overflow-hidden">
-          <CardContent className="p-6 h-full relative">
+          <CardContent className="p-3 sm:p-6 h-full relative">
             {/* Hash Function Info */}
-            <div className="mb-4 p-2 bg-muted rounded-md flex items-center">
-              <Hash className="h-4 w-4 mr-2 text-primary" />
-              <span className="text-sm text-muted-foreground">
-                Hash function: <code className="bg-background px-1 py-0.5 rounded">h(key) = sum(key.charCode(i) * (i+1)) % {bucketSize}</code>
-              </span>
+            <div className="mb-4 p-2 bg-muted rounded-md flex flex-col sm:flex-row items-start sm:items-center">
+              <div className="flex items-center">
+                <Hash className="h-4 w-4 mr-2 text-primary flex-shrink-0" />
+                <span className="text-xs sm:text-sm text-muted-foreground">
+                  Hash function: <code className="bg-background px-1 py-0.5 rounded break-words">h(key) = sum(key.charCode(i) * (i+1)) % {bucketSize}</code>
+                </span>
+              </div>
               
               {entries.some(entry => {
                 const index = hashFunction(entry.key);
                 return buckets[index].length > 1;
               }) && (
-                <div className="ml-auto flex items-center">
-                  <AlertTriangle className="h-4 w-4 mr-1 text-orange-500" />
+                <div className="mt-2 sm:mt-0 sm:ml-auto flex items-center">
+                  <AlertTriangle className="h-4 w-4 mr-1 text-orange-500 flex-shrink-0" />
                   <span className="text-xs text-orange-500">Collisions detected</span>
                 </div>
               )}
             </div>
             
-            <div className="w-full h-full">
+            <div className="w-full overflow-x-auto">
               {/* D3 Visualization */}
               <D3HashVisualizer 
                 entries={entries as any}

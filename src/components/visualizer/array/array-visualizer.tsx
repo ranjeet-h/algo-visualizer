@@ -1,54 +1,60 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
-import { ArrayItem } from '../../types/visualizer';
-import { VisualizationControls } from './visualization-controls';
-import { Button } from '../ui/button';
+import { ArrayItem } from '../types/visualizer';
+import { VisualizationControls } from '../common';
 import { motion } from 'framer-motion';
-import { Slider } from '../ui/slider';
-import { Input } from '../ui/input';
-import { 
-  RefreshCw, 
-  Shuffle, 
-  Info, 
-  Settings, 
-  BarChart, 
+import
+{
+  RefreshCw,
+  Shuffle,
+  Info,
+  Settings,
+  BarChart,
   Palette,
   Network,
   Thermometer
 } from 'lucide-react';
-import { BaseVisualizer } from './base-visualizer';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Label } from '../ui/label';
-import { Separator } from '../ui/separator';
-import { Badge } from '../ui/badge';
-import { Progress } from '../ui/progress';
-import { Checkbox } from '../ui/checkbox';
-import { D3ArrayVisualizer } from './d3-array-visualizer';
+import { BaseVisualizer } from '../common';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
+import { Label } from '../../ui/label';
+import { Separator } from '../../ui/separator';
+import { Badge } from '../../ui/badge';
+import { Progress } from '../../ui/progress';
+import { Checkbox } from '../../ui/checkbox';
+import { D3ArrayVisualizer } from './d3';
+import { Button, Slider } from '@radix-ui/themes';
+import { Tooltip } from 'react-tooltip';
+import { Input } from '@/components/ui/input';
 
-interface ArrayVisualizerProps {
+interface ArrayVisualizerProps
+{
   initialArray?: number[];
 }
 
-export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: ArrayVisualizerProps) {
-  const [array, setArray] = useState<ArrayItem[]>(initialArray.map(value => ({ value, status: 'default' })));
+export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: ArrayVisualizerProps)
+{
+  const [array, setArray] = useState<ArrayItem[]>(initialArray.map((value, index) => ({
+    value,
+    status: 'default',
+    id: `item-${index}-${value}`
+  })));
   const [speed, setSpeed] = useState(1);
   const [arraySize, setArraySize] = useState(initialArray.length);
   const [visualStyle, setVisualStyle] = useState<'bars' | 'bubbles' | 'forcedGraph' | 'heatmap'>('bars');
   const [colorTheme, setColorTheme] = useState<'default' | 'rainbow' | 'gradient'>('default');
   const [useD3, setUseD3] = useState<boolean>(true);
   const [selectedAlgorithm, setSelectedAlgorithm] = useState<string>('bubbleSort');
-  
+
   // Algorithm state
   const [isPlaying, setIsPlaying] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [totalSteps, setTotalSteps] = useState(0);
-  
+
   // References for animation
   const animationRef = useRef<number | null>(null);
   const stepsRef = useRef<Array<ArrayItem[]>>([]);
-  
+
   // Algorithm definitions with complexity information
   const algorithms = useMemo(() => ({
     bubbleSort: {
@@ -91,28 +97,40 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
   // Get current algorithm info
   const currentAlgorithm = algorithms[selectedAlgorithm as keyof typeof algorithms] || algorithms.bubbleSort;
 
-  const generateRandomArray = useCallback((size: number) => {
+  const generateRandomArray = useCallback((size: number) =>
+  {
     return Array.from({ length: size }, () => Math.floor(Math.random() * 50) + 1);
   }, []);
 
-  const resetArray = useCallback(() => {
-    const newArray: ArrayItem[] = generateRandomArray(arraySize).map(value => ({ value, status: 'default' }));
+  const resetArray = useCallback(() =>
+  {
+    const newArray: ArrayItem[] = generateRandomArray(arraySize).map((value, index) => ({
+      value,
+      status: 'default',
+      id: `item-${index}-${value}`
+    }));
     setArray(newArray);
     setIsPlaying(false);
     setIsCompleted(false);
     setCurrentStep(0);
     setTotalSteps(0);
     stepsRef.current = [newArray];
-    
-    if (animationRef.current) {
+
+    if (animationRef.current)
+    {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
     }
   }, [arraySize, generateRandomArray]);
 
-  const handleSizeChange = useCallback((value: number) => {
+  const handleSizeChange = useCallback((value: number) =>
+  {
     setArraySize(value);
-    const newArray = generateRandomArray(value).map(value => ({ value, status: 'default' }));
+    const newArray = generateRandomArray(value).map((value, index) => ({
+      value,
+      status: 'default',
+      id: `item-${index}-${value}`
+    }));
     setArray(newArray as ArrayItem[]);
     setIsPlaying(false);
     setIsCompleted(false);
@@ -121,9 +139,11 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
     stepsRef.current = [newArray as ArrayItem[]];
   }, [generateRandomArray]);
 
-  const getColorByTheme = useCallback((index: number, value: number, maxValue: number) => {
+  const getColorByTheme = useCallback((index: number, value: number, maxValue: number) =>
+  {
     let percentage = 0;
-    switch (colorTheme) {
+    switch (colorTheme)
+    {
       case 'rainbow':
         return `hsl(${(index / array.length) * 360}, 80%, 60%)`;
       case 'gradient':
@@ -135,116 +155,161 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
   }, [array.length, colorTheme]);
 
   // For now, let's only implement bubble sort for demonstration
-  const bubbleSort = useCallback(() => {
+  const bubbleSort = useCallback(() =>
+  {
     const steps: Array<ArrayItem[]> = [];
     const copy: ArrayItem[] = array.map(item => ({
       value: item.value,
-      status: 'default'
+      status: 'default',
+      id: item.id
     }));
-    steps.push([...copy]);
-    
+
+    // Add initial state
+    steps.push(JSON.parse(JSON.stringify(copy)));
+
     const n = copy.length;
-    for (let i = 0; i < n; i++) {
-      for (let j = 0; j < n - i - 1; j++) {
+    for (let i = 0; i < n; i++)
+    {
+      for (let j = 0; j < n - i - 1; j++)
+      {
+        // Only reset the elements we're about to compare
+        if (copy[j].status !== 'sorted') copy[j].status = 'default';
+        if (copy[j + 1].status !== 'sorted') copy[j + 1].status = 'default';
+
         // Highlight the elements being compared
         copy[j].status = 'comparing';
         copy[j + 1].status = 'comparing';
-        steps.push(copy.map(item => ({...item})));
-        
-        if (copy[j].value > copy[j + 1].value) {
-          // Swap elements
+        steps.push(JSON.parse(JSON.stringify(copy)));
+
+        if (Number(copy[j].value) > Number(copy[j + 1].value))
+        {
+          // Show the elements that will be swapped
           copy[j].status = 'swapping';
           copy[j + 1].status = 'swapping';
-          steps.push(copy.map(item => ({...item})));
-          
-          const temp = {...copy[j]};
-          copy[j] = {...copy[j + 1]};
+          steps.push(JSON.parse(JSON.stringify(copy)));
+
+          // Perform the swap
+          const temp = { ...copy[j] };
+          copy[j] = { ...copy[j + 1] };
           copy[j + 1] = temp;
-          steps.push(copy.map(item => ({...item})));
+
+          // Show the result after swapping 
+          steps.push(JSON.parse(JSON.stringify(copy)));
         }
-        
-        // Reset status of the compared elements
+
+        // Reset the status of compared elements
         copy[j].status = 'default';
-        copy[j + 1].status = 'default';
+
+        // If we're at the last element for this pass, mark it as sorted
+        if (j + 1 === n - i - 1)
+        {
+          copy[j + 1].status = 'sorted';
+        } else
+        {
+          copy[j + 1].status = 'default';
+        }
       }
-      
-      // Mark the last element as sorted
-      copy[n - i - 1].status = 'sorted';
-      steps.push(copy.map(item => ({...item})));
     }
-    
-    // Mark all elements as sorted
-    for (let i = 0; i < n; i++) {
+
+    // Mark all remaining elements as sorted in the final step
+    for (let i = 0; i < n; i++)
+    {
       copy[i].status = 'sorted';
     }
-    steps.push(copy.map(item => ({...item})));
-    
+    steps.push(JSON.parse(JSON.stringify(copy)));
+
     return steps;
   }, [array]);
 
   // Selection Sort implementation
-  const selectionSort = useCallback(() => {
+  const selectionSort = useCallback(() =>
+  {
     const steps: Array<ArrayItem[]> = [];
     const copy: ArrayItem[] = array.map(item => ({
       value: item.value,
-      status: 'default'
+      status: 'default',
+      id: item.id
     }));
-    steps.push([...copy]);
-    
+
+    // Add initial state
+    steps.push(JSON.parse(JSON.stringify(copy)));
+
     const n = copy.length;
-    for (let i = 0; i < n - 1; i++) {
+    for (let i = 0; i < n - 1; i++)
+    {
+      // Start with current position as a potential minimum
       let minIndex = i;
       copy[i].status = 'comparing';
-      steps.push(copy.map(item => ({...item})));
-      
-      for (let j = i + 1; j < n; j++) {
+      steps.push(JSON.parse(JSON.stringify(copy)));
+
+      // Find the minimum element
+      for (let j = i + 1; j < n; j++)
+      {
+        // Set current element to comparing state
         copy[j].status = 'comparing';
-        steps.push(copy.map(item => ({...item})));
-        
-        if (copy[j].value < copy[minIndex].value) {
-          if (minIndex !== i) {
+        steps.push(JSON.parse(JSON.stringify(copy)));
+
+        if (Number(copy[j].value) < Number(copy[minIndex].value))
+        {
+          // Reset previous minimum
+          if (minIndex !== i)
+          {
             copy[minIndex].status = 'default';
           }
+
+          // Update minimum index
           minIndex = j;
-        } else {
+        } else
+        {
+          // Reset element that's not the minimum
           copy[j].status = 'default';
         }
-        steps.push(copy.map(item => ({...item})));
       }
-      
-      // Swap elements if a smaller element was found
-      if (minIndex !== i) {
+
+      if (minIndex !== i)
+      {
+        // Highlight elements to be swapped
         copy[i].status = 'swapping';
         copy[minIndex].status = 'swapping';
-        steps.push(copy.map(item => ({...item})));
-        
-        const temp = {...copy[i]};
-        copy[i] = {...copy[minIndex]};
+        steps.push(JSON.parse(JSON.stringify(copy)));
+
+        // Swap elements
+        const temp = { ...copy[i] };
+        copy[i] = { ...copy[minIndex] };
         copy[minIndex] = temp;
-        steps.push(copy.map(item => ({...item})));
+
+        // Show after swap
+        steps.push(JSON.parse(JSON.stringify(copy)));
       }
-      
+
+      // Mark current position as sorted
       copy[i].status = 'sorted';
-      if (minIndex !== i) {
+
+      // Reset any comparing or swapping states
+      if (minIndex !== i)
+      {
         copy[minIndex].status = 'default';
       }
-      steps.push(copy.map(item => ({...item})));
+
+      steps.push(JSON.parse(JSON.stringify(copy)));
     }
-    
+
     // Mark the last element as sorted
     copy[n - 1].status = 'sorted';
-    steps.push(copy.map(item => ({...item})));
-    
+    steps.push(JSON.parse(JSON.stringify(copy)));
+
     return steps;
   }, [array]);
 
   // Get the current sort algorithm based on selection
-  const getCurrentSortAlgorithm = useCallback(() => {
-    switch (selectedAlgorithm) {
+  const getCurrentSortAlgorithm = useCallback(() =>
+  {
+    switch (selectedAlgorithm)
+    {
       case 'selectionSort':
         return selectionSort;
       case 'insertionSort':
-      case 'mergeSort': 
+      case 'mergeSort':
       case 'quickSort':
         // For demo, we'll use bubble sort for now
         // In a real implementation, you would add the actual algorithms
@@ -255,31 +320,42 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
     }
   }, [selectedAlgorithm, bubbleSort, selectionSort]);
 
-  const playVisualization = useCallback(() => {
+  const playVisualization = useCallback(() =>
+  {
     if (isPlaying || isCompleted) return;
-    
+
     setIsPlaying(true);
-    
+
     // Generate steps if not already generated
-    if (stepsRef.current.length <= 1) {
+    if (stepsRef.current.length <= 1)
+    {
       const sortAlgorithm = getCurrentSortAlgorithm();
       stepsRef.current = sortAlgorithm();
       setTotalSteps(stepsRef.current.length - 1);
     }
-    
+
     let step = currentStep;
-    const speedFactor = 500 / speed; // Adjust speed (lower is faster)
-    
-    const animate = () => {
+    // Make speed much more responsive - scale properly with slider
+    const speedFactor = Math.round(1000 / (speed * 2));
+
+    const animate = () =>
+    {
       const timestamp = Date.now();
-      
-      if (!animationRef.current || timestamp - (animationRef.current as any) >= speedFactor) {
-        if (step < stepsRef.current.length - 1) {
+
+      if (!animationRef.current || timestamp - (animationRef.current as any) >= speedFactor)
+      {
+        if (step < stepsRef.current.length - 1)
+        {
           step++;
           setCurrentStep(step);
+
+          // Update the array with the next step
           setArray(stepsRef.current[step]);
+
+          // Set timestamp for next animation
           animationRef.current = timestamp as any;
-        } else {
+        } else
+        {
           // Animation complete
           setIsCompleted(true);
           setIsPlaying(false);
@@ -287,47 +363,54 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
           return;
         }
       }
-      
+
       animationRef.current = requestAnimationFrame(animate);
     };
-    
+
     animationRef.current = requestAnimationFrame(animate);
   }, [isPlaying, isCompleted, currentStep, getCurrentSortAlgorithm, speed]);
 
-  const pauseVisualization = useCallback(() => {
+  const pauseVisualization = useCallback(() =>
+  {
     if (!isPlaying) return;
-    
+
     setIsPlaying(false);
-    
-    if (animationRef.current) {
+
+    if (animationRef.current)
+    {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
     }
   }, [isPlaying]);
 
-  const stepVisualization = useCallback(() => {
+  const stepVisualization = useCallback(() =>
+  {
     if (isCompleted || currentStep >= stepsRef.current.length - 1) return;
-    
+
     // Generate steps if not already generated
-    if (stepsRef.current.length <= 1) {
+    if (stepsRef.current.length <= 1)
+    {
       const sortAlgorithm = getCurrentSortAlgorithm();
       stepsRef.current = sortAlgorithm();
       setTotalSteps(stepsRef.current.length - 1);
     }
-    
+
     const nextStep = currentStep + 1;
     setCurrentStep(nextStep);
     setArray(stepsRef.current[nextStep]);
-    
-    if (nextStep === stepsRef.current.length - 1) {
+
+    if (nextStep === stepsRef.current.length - 1)
+    {
       setIsCompleted(true);
     }
   }, [currentStep, getCurrentSortAlgorithm, isCompleted]);
 
-  const resetVisualization = useCallback(() => {
-    const newArray: ArrayItem[] = generateRandomArray(arraySize).map(value => ({
+  const resetVisualization = useCallback(() =>
+  {
+    const newArray: ArrayItem[] = generateRandomArray(arraySize).map((value, index) => ({
       value,
-      status: 'default'
+      status: 'default',
+      id: `item-${index}-${value}`
     }));
     setArray(newArray);
     setIsPlaying(false);
@@ -335,17 +418,20 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
     setCurrentStep(0);
     setTotalSteps(0);
     stepsRef.current = [newArray];
-    
-    if (animationRef.current) {
+
+    if (animationRef.current)
+    {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
     }
   }, [arraySize, generateRandomArray]);
 
-  const renderArrayBars = useMemo(() => {
+  const renderArrayBars = useMemo(() =>
+  {
     const maxValue = Math.max(...array.map((item: ArrayItem) => Number(item.value)));
-    
-    if (useD3) {
+
+    if (useD3)
+    {
       return (
         <div className="h-[300px] p-4">
           <D3ArrayVisualizer
@@ -358,44 +444,40 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
         </div>
       );
     }
-    
+
     // Legacy non-D3 visualizations below
-    if (visualStyle === 'bars') {
+    if (visualStyle === 'bars')
+    {
       return (
         <div className="flex items-end justify-center gap-2 h-[300px] p-4">
           {array.map((item, index) => (
-            <TooltipProvider key={`${index}-${item.value}`}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.div
-                    className="flex flex-col items-center gap-2"
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                  >
-                    <motion.div
-                      className="w-12 rounded-t-lg"
-                      style={{
-                        height: `${(Number(item.value) / maxValue) * 200}px`,
-                        backgroundColor: getColorByTheme(index, Number(item.value), maxValue),
-                      }}
-                      whileHover={{ scale: 1.1 }}
-                    />
-                    <span className="text-sm font-medium">{item.value}</span>
-                  </motion.div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Value: {item.value}</p>
-                  <p>Index: {index}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <>
+              <Tooltip content={`Value: ${item.value}`} place="top" anchorSelect={`#${index}-${item.value}`} />
+              <motion.div
+                id={`${index}-${item.value}`}
+                className="flex flex-col items-center gap-2"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+              >
+                <motion.div
+                  className="w-12 rounded-t-lg"
+                  style={{
+                    height: `${(Number(item.value) / maxValue) * 200}px`,
+                    backgroundColor: getColorByTheme(index, Number(item.value), maxValue),
+                  }}
+                  whileHover={{ scale: 1.1 }}
+                />
+                <span className="text-sm font-medium">{item.value}</span>
+              </motion.div>
+            </>
           ))}
-        </div>
+        </div >
       );
     }
-    
-    if (visualStyle === 'bubbles') {
+
+    if (visualStyle === 'bubbles')
+    {
       return (
         <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 p-4">
           {array.map((item, index) => (
@@ -418,35 +500,28 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
         </div>
       );
     }
-    
+
     // Default to chart
     return (
       <div className="w-full h-[300px] p-4">
         <div className="relative w-full h-full flex items-end justify-between">
           {array.map((item, index) => (
-            <TooltipProvider key={`${index}-${item.value}`}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <motion.div
-                    className="relative flex-grow mx-1"
-                    initial={{ height: 0 }}
-                    animate={{ height: `${(Number(item.value) / maxValue) * 100}%` }}
-                    transition={{ type: "spring", stiffness: 100, delay: index * 0.05 }}
-                  >
-                    <div 
-                      className="absolute inset-0 rounded-t-md"
-                      style={{ backgroundColor: getColorByTheme(index, Number(item.value), maxValue) }}
-                    />
-                    <div className="absolute bottom-0 left-0 right-0 -mb-6 text-center text-xs">{item.value}</div>
-                  </motion.div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Value: {item.value}</p>
-                  <p>Index: {index}</p>
-                  <p>Percentage: {Math.round((Number(item.value) / maxValue) * 100)}%</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <>
+              <Tooltip content={`Value: ${item.value}`} place="top" anchorSelect={`#${index}-${item.value}`} />
+              <motion.div
+                id={`${index}-${item.value}`}
+                className="relative flex-grow mx-1"
+                initial={{ height: 0 }}
+                animate={{ height: `${(Number(item.value) / maxValue) * 100}%` }}
+                transition={{ type: "spring", stiffness: 100, delay: index * 0.05 }}
+              >
+                <div
+                  className="absolute inset-0 rounded-t-md"
+                  style={{ backgroundColor: getColorByTheme(index, Number(item.value), maxValue) }}
+                />
+                <div className="absolute bottom-0 left-0 right-0 -mb-6 text-center text-xs">{item.value}</div>
+              </motion.div>
+            </>
           ))}
         </div>
         <Separator className="mt-8" />
@@ -465,38 +540,39 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
     <div className="w-full space-y-6">
       <div>
         <h3 className="font-medium mb-3">Algorithm Selection</h3>
-        <Tabs 
-          defaultValue={selectedAlgorithm} 
-          className="w-full" 
-          onValueChange={(value) => {
+        <Tabs
+          defaultValue={selectedAlgorithm}
+          className="w-full"
+          onValueChange={(value) =>
+          {
             setSelectedAlgorithm(value);
             resetVisualization();
           }}
         >
-          <TabsList className="grid grid-cols-3 mb-2">
-            <TabsTrigger value="bubbleSort">Bubble</TabsTrigger>
-            <TabsTrigger value="selectionSort">Selection</TabsTrigger>
-            <TabsTrigger value="quickSort">Quick</TabsTrigger>
+          <TabsList className="grid grid-cols-3 mb-2 gap-4">
+            <TabsTrigger value="bubbleSort" className="border cursor-pointer">Bubble</TabsTrigger>
+            <TabsTrigger value="selectionSort" className="border cursor-pointer">Selection</TabsTrigger>
+            <TabsTrigger value="quickSort" className="border cursor-pointer">Quick</TabsTrigger>
           </TabsList>
-          <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="insertionSort">Insertion</TabsTrigger>
-            <TabsTrigger value="mergeSort">Merge</TabsTrigger>
+          <TabsList className="grid grid-cols-2 mb-4 gap-4">
+            <TabsTrigger value="insertionSort" className="border cursor-pointer">Insertion</TabsTrigger>
+            <TabsTrigger value="mergeSort" className="border cursor-pointer">Merge</TabsTrigger>
           </TabsList>
-          
+
           <p className="text-xs text-muted-foreground mb-4">
             {currentAlgorithm.description}
           </p>
         </Tabs>
       </div>
-      
+
       <Card>
         <CardContent className="p-4 space-y-6">
           <Tabs defaultValue="array" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="array">Array</TabsTrigger>
-              <TabsTrigger value="visual">Visual</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 gap-4">
+              <TabsTrigger value="array" className="cursor-pointer border">Array</TabsTrigger>
+              <TabsTrigger value="visual" className="cursor-pointer border">Visual</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="array" className="space-y-4 mt-4">
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -518,7 +594,7 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
               <div className="flex gap-2 max-w-md">
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="2"
                   onClick={resetArray}
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
@@ -526,7 +602,7 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
                 </Button>
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="2"
                   onClick={() => setArray([...array].sort(() => Math.random() - 0.5).map(item => ({ ...item, status: 'default' })))}
                 >
                   <Shuffle className="h-4 w-4 mr-2" />
@@ -539,10 +615,12 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
                 <Input
                   id="custom-array"
                   placeholder="e.g. 5,2,8,1,9"
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                    const values = e.target.value.split(',').map(value => parseFloat(value)).filter((n: number) => !isNaN(n));
-                    if (values.length > 0) {
-                      setArray(values.map(value => ({ value, status: 'default' })));
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  {
+                    const values: any = e.target.value.split(',').map(value => parseFloat(value)).filter((n: number) => !isNaN(n));
+                    if (values.length > 0)
+                    {
+                      setArray(values.map((value: any) => ({ value, status: 'default', id: value })));
                       setArraySize(values.length);
                     }
                   }}
@@ -550,7 +628,7 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
                 <p className="text-xs text-muted-foreground">Enter comma-separated numbers</p>
               </div>
             </TabsContent>
-            
+
             <TabsContent value="visual" className="space-y-4 mt-4">
               <div className="flex justify-between items-center mb-4">
                 <Label>Visualization Engine</Label>
@@ -569,37 +647,37 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
               <div className="space-y-2">
                 <Label>Display Style</Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    variant={visualStyle === 'bars' ? "default" : "outline"} 
-                    size="sm"
+                  <Button
+                    variant={visualStyle === 'bars' ? "classic" : "outline"}
+                    size="1"
                     onClick={() => setVisualStyle('bars')}
                   >
                     <BarChart className="h-4 w-4 mr-2" />
                     Bars
                   </Button>
-                  <Button 
-                    variant={visualStyle === 'bubbles' ? "default" : "outline"} 
-                    size="sm"
+                  <Button
+                    variant={visualStyle === 'bubbles' ? "classic" : "outline"}
+                    size="1"
                     onClick={() => setVisualStyle('bubbles')}
                   >
                     <Settings className="h-4 w-4 mr-2" />
                     Bubbles
                   </Button>
                 </div>
-                
+
                 {useD3 && (
                   <div className="grid grid-cols-2 gap-2 mt-2">
-                    <Button 
-                      variant={visualStyle === 'forcedGraph' ? "default" : "outline"} 
-                      size="sm"
+                    <Button
+                      variant={visualStyle === 'forcedGraph' ? "classic" : "outline"}
+                      size="1"
                       onClick={() => setVisualStyle('forcedGraph')}
                     >
                       <Network className="h-4 w-4 mr-2" />
                       Network
                     </Button>
-                    <Button 
-                      variant={visualStyle === 'heatmap' ? "default" : "outline"} 
-                      size="sm"
+                    <Button
+                      variant={visualStyle === 'heatmap' ? "classic" : "outline"}
+                      size="1"
                       onClick={() => setVisualStyle('heatmap')}
                     >
                       <Thermometer className="h-4 w-4 mr-2" />
@@ -608,29 +686,29 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
                   </div>
                 )}
               </div>
-              
+
               <div className="space-y-2">
                 <Label>Color Theme</Label>
                 <div className="grid grid-cols-3 gap-2">
-                  <Button 
-                    variant={colorTheme === 'default' ? "default" : "outline"} 
-                    size="sm"
+                  <Button
+                    variant={colorTheme === 'default' ? "classic" : "outline"}
+                    size="1"
                     onClick={() => setColorTheme('default')}
                   >
                     <Palette className="h-4 w-4 mr-2" />
                     Default
                   </Button>
-                  <Button 
-                    variant={colorTheme === 'rainbow' ? "default" : "outline"} 
-                    size="sm"
+                  <Button
+                    variant={colorTheme === 'rainbow' ? "classic" : "outline"}
+                    size="1"
                     onClick={() => setColorTheme('rainbow')}
                   >
                     <Palette className="h-4 w-4 mr-2" />
                     Rainbow
                   </Button>
-                  <Button 
-                    variant={colorTheme === 'gradient' ? "default" : "outline"} 
-                    size="sm"
+                  <Button
+                    variant={colorTheme === 'gradient' ? "classic" : "outline"}
+                    size="1"
                     onClick={() => setColorTheme('gradient')}
                   >
                     <Palette className="h-4 w-4 mr-2" />
@@ -677,19 +755,10 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
           <div className="flex justify-between items-center">
             <div>
               <CardTitle className="text-xl flex items-center">
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Info className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Visualize array data with different display styles and color themes.</p>
-                      {useD3 && <p className="text-xs text-muted-foreground mt-1">Powered by D3.js for advanced visualizations</p>}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Tooltip content="Visualize array data with different display styles and color themes." place="top" anchorSelect='#array-visualizer-info' />
+                <Button id='array-visualizer-info' variant="classic" size="1" className="h-8 w-8">
+                  <Info className="h-4 w-4" />
+                </Button>
               </CardTitle>
               <CardDescription>
                 {array.length} items • {visualStyle} view • {colorTheme} theme

@@ -1,28 +1,30 @@
 import { useState, useCallback, useEffect } from 'react';
 import './App.css'
 import { MainLayout } from './components/layout/main-layout'
-import { ArrayVisualizer } from './components/visualizer/array-visualizer'
+import { 
+  ArrayVisualizer,
+  LinkedListVisualizer,
+  StackVisualizer,
+  QueueVisualizer,
+  DequeVisualizer,
+  HashVisualizer,
+  HashSetVisualizer
+} from './components/visualizer'
+import { BinaryTreeVisualizer } from './components/visualizer/tree/binary';
 import { Zap, BookOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { LinkedListVisualizer } from './components/visualizer/linked-list-visualizer'
-import { StackVisualizer } from './components/visualizer/stack-visualizer'
-import { QueueVisualizer } from './components/visualizer/queue-visualizer'
-import { DequeVisualizer } from './components/visualizer/deque-visualizer'
-import { HashVisualizer } from './components/visualizer/hash-visualizer';
-import { HashSetVisualizer } from './components/visualizer/hash-set-visualizer';
+import { ToastContainer } from 'react-toastify';
 // import { cn } from './lib/utils';
 
 function App() {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedItem, setSelectedItem] = useState('Singly Linked List');
   const [isLoading, setIsLoading] = useState(true);
-  console.log("selectedItem", selectedItem)
-  console.log("selectedCategory", selectedCategory)
 
   // Simulate loading state for smoother transitions
   useEffect(() => {
     // Force dark mode
-    document.documentElement.classList.add('dark');
+    // document.documentElement.classList.add('dark');
     
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -125,6 +127,21 @@ function App() {
           />
         );
       }
+      if (selectedItem === 'Binary Tree') {
+        return (
+          <BinaryTreeVisualizer
+            key={`${selectedCategory}-${selectedItem}`}
+          />
+        );
+      }
+      // Handle Trees parent category
+      if (selectedItem === 'Trees') {
+        return (
+          <BinaryTreeVisualizer
+            key={`${selectedCategory}-Trees`}
+          />
+        );
+      }
     }
 
     // Algorithms
@@ -162,6 +179,15 @@ function App() {
           </motion.div>
         )}
       </AnimatePresence>
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        theme="light"
+      />
     </MainLayout>
   )
 }

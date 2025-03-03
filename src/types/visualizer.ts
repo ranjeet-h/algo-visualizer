@@ -24,6 +24,7 @@ export interface VisualizationControlsProps {
 export interface ArrayItem {
   value: number | string;
   status?: 'default' | 'active' | 'comparing' | 'sorted' | 'highlighted' | 'swapping';
+  id?: number | string; // Optional unique identifier for tracking items across updates
 }
 
 // Linked List Node

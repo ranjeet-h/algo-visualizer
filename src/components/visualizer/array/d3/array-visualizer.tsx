@@ -88,20 +88,30 @@ export function D3ArrayVisualizer({
     if (!svgRef.current || !data.length || containerWidth === 0) return;
 
     const width = containerWidth;
-
-    // Clear previous visualization
-    d3.select(svgRef.current).selectAll('*').remove();
-
     const svg = d3.select(svgRef.current);
     const margin = { top: 20, right: 20, bottom: 30, left: 40 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
     const maxValue = Math.max(...data.map(item => Number(item.value)));
 
-    // Create main group element
-    const g = svg
-      .append('g')
-      .attr('transform', `translate(${margin.left},${margin.top})`);
+    // Store current visualization style and theme in custom attributes
+    const currentStyle = svg.attr('data-style') || '';
+    const currentTheme = svg.attr('data-theme') || '';
+    
+    // Only clear everything on first render or when visualization style/theme changes
+    // This is the key change to prevent clearing during sorting animation
+    if (currentStyle !== visualStyle || currentTheme !== colorTheme || svg.select('g').empty()) {
+      svg.selectAll('*').remove();
+      svg.attr('data-style', visualStyle);
+      svg.attr('data-theme', colorTheme);
+      
+      // Create main group
+      svg.append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+    }
+
+    // Get the main group
+    const g = svg.select('g');
 
     // Create scales
     const xScale = d3.scaleBand()
@@ -113,58 +123,118 @@ export function D3ArrayVisualizer({
       .domain([0, maxValue])
       .range([innerHeight, 0]);
 
-    // Add axes
+    // Remove and recreate axes
+    g.selectAll('.axis').remove();
+    
+    // Add x-axis
     g.append('g')
+      .attr('class', 'axis x-axis')
       .attr('transform', `translate(0,${innerHeight})`)
-      .call(d3.axisBottom(xScale))
+      .call(d3.axisBottom(xScale) as any)
       .selectAll('text')
       .style('text-anchor', 'middle')
       .style('font-size', '10px');
 
+    // Add y-axis
     g.append('g')
-      .call(d3.axisLeft(yScale).ticks(5))
+      .attr('class', 'axis y-axis')
+      .call(d3.axisLeft(yScale).ticks(5) as any)
       .selectAll('text')
       .style('font-size', '10px');
 
     // Render based on visualization style
     if (visualStyle === 'bars') {
-      const bars = g.selectAll('.bar')
-        .data(data)
-        .enter()
+      // Clear existing bars only if we've changed visualization style 
+      if (svg.attr('data-bars-initialized') !== 'true') {
+        g.selectAll('.bar-container').remove();
+        g.append('g').attr('class', 'bar-container');
+        svg.attr('data-bars-initialized', 'true');
+      }
+      
+      const barContainer = g.select('.bar-container');
+      
+      // Use data joining with a key function to track items during sorting
+      // This is critical for animations to work correctly
+      const bars = barContainer.selectAll<SVGRectElement, ArrayItem>('.bar')
+        .data(data, (d: any) => d.id || '');
+      
+      // Remove bars that no longer exist in the data
+      bars.exit().remove();
+      
+      // Add new bars with initial position at the bottom
+      const enterBars = bars.enter()
         .append('rect')
         .attr('class', 'bar')
-        .attr('x', (_, i) => xScale(i.toString()) || 0)
         .attr('width', xScale.bandwidth())
-        .attr('fill', (d, i) => getColor(i, Number(d.value), maxValue))
         .attr('rx', 4)
-        .attr('ry', 4);
-
-      if (showAnimation) {
-        bars
-          .attr('y', innerHeight)
-          .attr('height', 0)
-          .transition()
-          .duration(800)
-          .delay((_, i) => i * 50)
-          .attr('y', d => yScale(Number(d.value)))
-          .attr('height', d => innerHeight - yScale(Number(d.value)));
-      } else {
-        bars
-          .attr('y', d => yScale(Number(d.value)))
-          .attr('height', d => innerHeight - yScale(Number(d.value)));
-      }
-
-      // Add value labels
-      g.selectAll('.value-label')
-        .data(data)
-        .enter()
+        .attr('ry', 4)
+        .attr('y', innerHeight)
+        .attr('height', 0)
+        .attr('fill', (d: any, i: number) => {
+          // Color based on status with more vibrant colors
+          switch(d.status) {
+            case 'comparing':
+              return 'hsl(217, 91%, 60%)'; // Bright blue
+            case 'swapping':
+              return 'hsl(43, 96%, 58%)';  // Bright yellow
+            case 'sorted':
+              return 'hsl(142, 71%, 45%)'; // Bright green
+            case 'highlighted':
+              return 'hsl(333, 71%, 60%)'; // Bright pink
+            default:
+              return getColor(i, Number(d.value), maxValue);
+          }
+        });
+      
+      // Merge enter + update selections and animate to new positions
+      const allBars = enterBars.merge(bars as any);
+      
+      // Update positions - x is based on array index, which changes during sorting
+      allBars
+        .transition()
+        .duration(100) // Make transitions very fast - just enough to be visible
+        .attr('x', (_d: any, i: number) => xScale(i.toString()) || 0)
+        .attr('y', (d: any) => yScale(Number(d.value)))
+        .attr('height', (d: any) => innerHeight - yScale(Number(d.value)))
+        .attr('fill', (d: any, i: number) => {
+          // Color based on status with more vibrant colors
+          switch(d.status) {
+            case 'comparing':
+              return 'hsl(217, 91%, 60%)'; // Bright blue
+            case 'swapping':
+              return 'hsl(43, 96%, 58%)';  // Bright yellow
+            case 'sorted':
+              return 'hsl(142, 71%, 45%)'; // Bright green
+            case 'highlighted':
+              return 'hsl(333, 71%, 60%)'; // Bright pink
+            default:
+              return getColor(i, Number(d.value), maxValue);
+          }
+        });
+      
+      // Handle text labels similarly
+      const labels = barContainer.selectAll<SVGTextElement, ArrayItem>('.value-label')
+        .data(data, (d: any) => d.id || '');
+      
+      labels.exit().remove();
+      
+      const enterLabels = labels.enter()
         .append('text')
         .attr('class', 'value-label')
-        .attr('x', (_, i) => (xScale(i.toString()) || 0) + xScale.bandwidth() / 2)
-        .attr('y', d => yScale(Number(d.value)) - 5)
         .attr('text-anchor', 'middle')
-        .attr('font-size', '10px')
-        .text(d => d.value);
+        .attr('fill', 'currentColor')
+        .attr('font-size', '12px')
+        .attr('y', innerHeight)
+        .text((d: any) => d.value);
+      
+      const allLabels = enterLabels.merge(labels as any);
+      
+      // Update label positions - x is based on array index, which changes during sorting
+      allLabels
+        .transition()
+        .duration(100) // Make transitions match bar speed
+        .attr('x', (_d: any, i: number) => (xScale(i.toString()) || 0) + xScale.bandwidth() / 2)
+        .attr('y', (d: any) => yScale(Number(d.value)) - 5);
     }
     else if (visualStyle === 'bubbles') {
       // Create bubble chart
