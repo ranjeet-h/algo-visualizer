@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Menu, X, ChevronRight, LayoutGrid, Code2, Braces, Search, Settings, HelpCircle, List, Link, Layers, 
   GitBranch, Network, ArrowUpDown, SortAsc, 
   SortDesc, Shuffle, Hash, Database,
   Binary, BarChart, FileSearch, Code, Clock, 
-  Sigma, Puzzle
+  Sigma, Puzzle, MessageSquare, Briefcase, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '../../lib/utils';
@@ -12,10 +12,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
 import { dataStructures, algorithms } from '../../lib/utils';
 import React from 'react';
-import { Button } from '@radix-ui/themes';
+import { Dialog, DialogTitle } from '@headlessui/react';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -40,6 +39,27 @@ export function MainLayout({ children, onSelect }: MainLayoutProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeItem, setActiveItem] = useState<{category: string, item: string} | null>(null);
+  
+  // Dialog state
+  const [isDevDialogOpen, setIsDevDialogOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  
+  // Ref for handling click outside of user dropdown
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Handle click outside of user dropdown to close it
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+        setIsUserDropdownOpen(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Helper function to get an icon for a given title
   const getIcon = (title: string) => {
@@ -368,7 +388,163 @@ export function MainLayout({ children, onSelect }: MainLayoutProps) {
             </div>
           </div>
           
+          {/* Developer info section - refined for better responsiveness */}
+          <div className="hidden md:flex items-center justify-center gap-2 absolute left-1/2 transform -translate-x-1/2">
+            <div className="flex items-center gap-2 bg-background/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border shadow-sm">
+              <p className="text-sm font-medium">Developed by</p>
+              <p className="text-sm font-semibold text-primary">Ranjeet Harishchandre</p>
+              <div className="flex items-center gap-2 border-l border-border pl-2">
+                <a 
+                  href="https://x.com/its_me_ranjeeth" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:bg-primary/10 p-1.5 rounded-full transition-colors"
+                  aria-label="Twitter profile"
+                >
+                  <MessageSquare className="h-4 w-4 text-primary" />
+                </a>
+                <a 
+                  href="https://www.linkedin.com/in/ranjeet-harishchandre-8bab48151/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:bg-primary/10 p-1.5 rounded-full transition-colors"
+                  aria-label="LinkedIn profile"
+                >
+                  <Briefcase className="h-4 w-4 text-primary" />
+                </a>
+              </div>
+            </div>
+          </div>
+
           <div className="flex items-center gap-4">
+            {/* Mobile Developer Info with Headless UI Dialog */}
+            <div className="md:hidden">
+              <button 
+                onClick={() => setIsDevDialogOpen(true)}
+                className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md text-sm font-medium bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-1.5 transition-colors"
+              >
+                <p className="text-xs">Developer</p>
+                <ChevronDown className="h-3 w-3" />
+              </button>
+              
+              <Dialog 
+                open={isDevDialogOpen} 
+                onClose={() => setIsDevDialogOpen(false)}
+                className="relative z-50"
+              >
+                <AnimatePresence>
+                  {isDevDialogOpen && (
+                    <>
+                      {/* Backdrop with Framer Motion */}
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        className="fixed inset-0 bg-black/40 backdrop-blur-sm"
+                        aria-hidden="true"
+                        onClick={() => setIsDevDialogOpen(false)}
+                      />
+                      
+                      {/* Full-screen container for centering the panel */}
+                      <div className="fixed inset-0 flex items-center justify-center p-4 overflow-y-auto">
+                        {/* Dialog Panel with Framer Motion */}
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                          transition={{ 
+                            duration: 0.4, 
+                            ease: [0.19, 1.0, 0.22, 1.0], 
+                            scale: { duration: 0.35 },
+                            y: { duration: 0.3 }
+                          }}
+                          className="w-full mx-auto max-w-sm rounded-xl bg-card border border-border shadow-xl overflow-hidden"
+                        >
+                          <div className="p-5 border-b border-border flex justify-between items-center">
+                            <DialogTitle className="text-lg font-semibold">Developer Info</DialogTitle>
+                            <motion.button 
+                              onClick={() => setIsDevDialogOpen(false)}
+                              className="rounded-full p-1.5 hover:bg-muted transition-colors"
+                              whileHover={{ rotate: 90 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <X className="h-4 w-4" />
+                            </motion.button>
+                          </div>
+                          
+                          <div className="p-5">
+                            <div className="flex flex-col gap-1.5">
+                              <p className="font-medium text-base">Ranjeet Harishchandre</p>
+                              <p className="text-sm text-muted-foreground">Full Stack Developer</p>
+                            </div>
+                          </div>
+                          
+                          <div className="p-5 border-t border-border">
+                            <div className="grid grid-cols-1 gap-3">
+                              <motion.a 
+                                href="https://x.com/its_me_ranjeeth" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 p-3 rounded-lg transition-all"
+                                onClick={() => setIsDevDialogOpen(false)}
+                                whileHover={{ 
+                                  backgroundColor: 'rgba(var(--accent), 0.2)', 
+                                  y: -2,
+                                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+                                }}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, delay: 0.1 }}
+                              >
+                                <motion.div 
+                                  className="bg-primary/10 p-2.5 rounded-lg"
+                                  whileHover={{ scale: 1.05 }}
+                                >
+                                  <MessageSquare className="h-5 w-5 text-primary" />
+                                </motion.div>
+                                <div>
+                                  <p className="font-medium">Twitter</p>
+                                  <p className="text-xs text-muted-foreground">Follow me for updates</p>
+                                </div>
+                              </motion.a>
+                              
+                              <motion.a 
+                                href="https://linkedin.com/in/ranjeet-harishchandre-1224831a2" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 p-3 rounded-lg transition-all"
+                                onClick={() => setIsDevDialogOpen(false)}
+                                whileHover={{ 
+                                  backgroundColor: 'rgba(var(--accent), 0.2)', 
+                                  y: -2,
+                                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+                                }}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, delay: 0.2 }}
+                              >
+                                <motion.div 
+                                  className="bg-primary/10 p-2.5 rounded-lg"
+                                  whileHover={{ scale: 1.05 }}
+                                >
+                                  <Briefcase className="h-5 w-5 text-primary" />
+                                </motion.div>
+                                <div>
+                                  <p className="font-medium">LinkedIn</p>
+                                  <p className="text-xs text-muted-foreground">Connect with me</p>
+                                </div>
+                              </motion.a>
+                            </div>
+                          </div>
+                        </motion.div>
+                      </div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </Dialog>
+            </div>
+
             <div className="relative w-64 hidden md:block">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
@@ -379,31 +555,43 @@ export function MainLayout({ children, onSelect }: MainLayoutProps) {
               />
             </div>
             
-
             <Separator orientation="vertical" className="h-8" />
             
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="rounded-full h-8 w-8 p-0">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>AL</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <HelpCircle className="mr-2 h-4 w-4" />
-                  <span>Help</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {/* User Account Dropdown - Custom Implementation */}
+            <div className="relative" ref={userDropdownRef}>
+              <button
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                className="rounded-full h-8 w-8 p-0 bg-transparent hover:bg-accent/50 flex items-center justify-center transition-colors"
+                aria-label="User menu"
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src="https://github.com/shadcn.png" />
+                  <AvatarFallback>AL</AvatarFallback>
+                </Avatar>
+              </button>
+              
+              {isUserDropdownOpen && (
+                <div className="absolute right-0 mt-1 w-56 rounded-md bg-white text-popover-foreground shadow-md border border-border z-50 overflow-hidden">
+                  <div className="p-2 font-semibold text-sm border-b border-border">
+                    My Account
+                  </div>
+                  <button
+                    className="flex items-center gap-2 w-full p-2 hover:bg-accent text-sm text-left"
+                    onClick={() => setIsUserDropdownOpen(false)}
+                  >
+                    <Settings className="h-4 w-4" />
+                    <span>Settings</span>
+                  </button>
+                  <button
+                    className="flex items-center gap-2 w-full p-2 hover:bg-accent text-sm text-left"
+                    onClick={() => setIsUserDropdownOpen(false)}
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    <span>Help</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -597,17 +785,15 @@ export function MainLayout({ children, onSelect }: MainLayoutProps) {
           {filteredCategories.length === 0 && (
             <div className="flex flex-col items-center justify-center h-32 text-center">
               <div className="text-muted-foreground mb-2">No results found</div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Try searching for something else or clear the search
               </p>
-              <Button
-                variant="classic"
-                size="1"
-                className="mt-4"
+              <button
+                className="mt-4 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2"
                 onClick={() => setSearchQuery('')}
               >
                 Clear Search
-              </Button>
+              </button>
             </div>
           )}
         </div>
