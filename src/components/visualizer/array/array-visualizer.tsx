@@ -25,6 +25,8 @@ import { D3ArrayVisualizer } from './d3';
 import { Button, Slider } from '@radix-ui/themes';
 import { Tooltip } from 'react-tooltip';
 import { Input } from '@/components/ui/input';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 interface ArrayVisualizerProps
 {
@@ -62,35 +64,40 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
       type: 'sorting',
       timeComplexity: 'O(n²)',
       spaceComplexity: 'O(1)',
-      description: 'A simple sorting algorithm that repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.'
+      description: 'A simple sorting algorithm that repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.',
+      codeSnippet: `function bubbleSort<T>(arr: T[]): T[] {\n  const n = arr.length;\n  let swapped;\n  for (let i = 0; i < n - 1; i++) {\n    swapped = false;\n    for (let j = 0; j < n - i - 1; j++) {\n      if (arr[j] > arr[j + 1]) {\n        const temp = arr[j];\n        arr[j] = arr[j + 1];\n        arr[j + 1] = temp;\n        swapped = true;\n      }\n    }\n    if (!swapped) {\n      break;\n    }\n  }\n  return arr;\n}`
     },
     selectionSort: {
       name: 'Selection Sort',
       type: 'sorting',
       timeComplexity: 'O(n²)',
       spaceComplexity: 'O(1)',
-      description: 'A sorting algorithm that divides the input list into two parts: a sorted sublist and an unsorted sublist, repeatedly finding the minimum element from the unsorted sublist and moving it to the sorted sublist.'
+      description: 'A sorting algorithm that divides the input list into two parts: a sorted sublist and an unsorted sublist, repeatedly finding the minimum element from the unsorted sublist and moving it to the sorted sublist.',
+      codeSnippet: '// Selection Sort code snippet coming soon!'
     },
     insertionSort: {
       name: 'Insertion Sort',
       type: 'sorting',
       timeComplexity: 'O(n²)',
       spaceComplexity: 'O(1)',
-      description: 'A simple sorting algorithm that builds the final sorted array one item at a time, efficiently for small data sets.'
+      description: 'A simple sorting algorithm that builds the final sorted array one item at a time, efficiently for small data sets.',
+      codeSnippet: '// Insertion Sort code snippet coming soon!'
     },
     mergeSort: {
       name: 'Merge Sort',
       type: 'sorting',
       timeComplexity: 'O(n log n)',
       spaceComplexity: 'O(n)',
-      description: 'An efficient, stable, comparison-based, divide and conquer sorting algorithm, with guaranteed O(n log n) time complexity.'
+      description: 'An efficient, stable, comparison-based, divide and conquer sorting algorithm, with guaranteed O(n log n) time complexity.',
+      codeSnippet: '// Merge Sort code snippet coming soon!'
     },
     quickSort: {
       name: 'Quick Sort',
       type: 'sorting',
       timeComplexity: 'O(n log n)',
       spaceComplexity: 'O(log n)',
-      description: 'An efficient divide-and-conquer sorting algorithm that works by selecting a pivot element and partitioning the array around it.'
+      description: 'An efficient divide-and-conquer sorting algorithm that works by selecting a pivot element and partitioning the array around it.',
+      codeSnippet: '// Quick Sort code snippet coming soon!'
     }
   }), []);
 
@@ -780,7 +787,59 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
           </div>
         </CardHeader>
         <CardContent>
-          {renderArrayBars}
+          <Tabs defaultValue="visualization" className="w-full pt-2 md:pt-4">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-4">
+              <TabsTrigger value="visualization">Visualization & Controls</TabsTrigger>
+              <TabsTrigger value="information">Information</TabsTrigger>
+              <TabsTrigger value="code">Code</TabsTrigger>
+            </TabsList>
+            <TabsContent value="visualization">
+              {renderArrayBars}
+            </TabsContent>
+            <TabsContent value="information">
+              <div className="space-y-4 p-1">
+                <h3 className="text-xl font-semibold tracking-tight text-foreground">{currentAlgorithm.name}</h3>
+                <p className="text-sm text-muted-foreground">{currentAlgorithm.description}</p>
+                <Separator className="my-3" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-md font-medium text-foreground mb-1">Time Complexity</h4>
+                    <Badge variant="secondary" className="text-sm">{currentAlgorithm.timeComplexity}</Badge>
+                  </div>
+                  <div>
+                    <h4 className="text-md font-medium text-foreground mb-1">Space Complexity</h4>
+                    <Badge variant="secondary" className="text-sm">{currentAlgorithm.spaceComplexity}</Badge>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            <TabsContent value="code">
+              <div className="space-y-3 p-1 w-full">
+                <h3 className="text-lg font-semibold tracking-tight text-foreground">Code Snippet: {currentAlgorithm.name}</h3>
+                <p className="text-sm text-muted-foreground">
+                  An illustrative code snippet for the {currentAlgorithm.name} algorithm.
+                </p>
+                <div className="mt-2 bg-muted rounded-md text-sm overflow-x-auto w-full">
+                {/* @ts-expect-error - This is a workaround to get the syntax highlighting to work. */}
+                  <SyntaxHighlighter 
+                    language="javascript" 
+                    style={oneLight} 
+                    customStyle={{ 
+                      background: 'transparent', // Use the bg-muted from parent div
+                      padding: '1rem', 
+                      borderRadius: '0.375rem' // Match rounded-md from parent
+                    }}
+                    showLineNumbers // Optionally, show line numbers
+                    wrapLines={true} // Enable line wrapping
+                    wrapLongLines={true} // Enable long line wrapping
+                    children={currentAlgorithm.codeSnippet || '// Code snippet not available for this algorithm yet.'}
+                  />
+                    {/* {currentAlgorithm.codeSnippet || '// Code snippet not available for this algorithm yet.'}
+                  </SyntaxHighlighter> */}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </BaseVisualizer>
