@@ -820,6 +820,7 @@ export function ArrayVisualizer({ initialArray = [5, 2, 8, 1, 9, 3, 7, 4, 6] }: 
                   An illustrative code snippet for the {currentAlgorithm.name} algorithm.
                 </p>
                 <div className="mt-2 bg-muted rounded-md text-sm overflow-x-auto w-full">
+                  
                 {/* @ts-expect-error - This is a workaround to get the syntax highlighting to work. */}
                   <SyntaxHighlighter 
                     language="javascript" 
